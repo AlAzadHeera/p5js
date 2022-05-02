@@ -2,28 +2,60 @@ let framecount = 0;
 let start_pipe_x = 500;
 let c_size = 800; //Canvas size
 let player;
+let finish_line;
 let capture;
 let enter_press = false;
 let faceapi;
 let detections = [];
 let spaceship;
+let finishLine;
 let asteroids = [];
 let ast_colors = ["#9535C5", "#295EA8", "#3FE7FF", "#61FFAF", "#FF7B45"]
 let alive = true;
 let won = false;
 var background;
 var asteroid;
+let winTimeout;
+
+class Finish {
+  constructor(x, y, w, h) {
+    this.x = x; // Center position of spaceship
+    this.y = y; // Center position of spaceship
+    this.w = w;
+    this.h = h;
+  }
+
+  show() {
+    push()
+    imageMode(CENTER);
+    image(finishLine, this.x - 1, this.y - 1, this.w, this.h);
+    pop()
+    this.y += 1;
+  }
+
+  update() {
+    this.y += 1
+  }
+
+  finishHit(spaceship) {
+    let di = dist(this.x, this.y, spaceship.x, spaceship.y)
+    if (di < spaceship.r) {
+      return di;
+    }
+  }
+
+}
 
 class Asteroid {
   constructor(r) {
-    this.r = r * 1.5; //Size of the astaroids
-    this.pos = createVector(random(50, width - 50), 0);
-    this.vel = createVector(0, random(0.5, 1));
+    this.r = windowWidth / 15; //Size of the astaroids
+    this.pos = createVector(random(50, width), 0);
+    this.vel = createVector(0, random(1, 3));
     this.total = floor(random(6, 10));
     this.offset = [];
     this.color = random(ast_colors);
     for (var i = 0; i < this.total; i++) {
-      this.offset[i] = random(-this.r * 1.5, this.r * 1.5);
+      this.offset[i] = random(-this.r * .5, this.r * .5);
     }
   }
 
@@ -39,20 +71,29 @@ class Asteroid {
   update() {
     this.pos.add(this.vel)
   }
+
+
+
 }
 
 class Spaceship {
   constructor(x, y, w, h) {
     this.x = x; // Center position of spaceship
     this.y = y; // Center position of spaceship
-    this.w = w * 1.5;
-    this.h = h * 1.5;
+    if (windowWidth > windowHeight) {
+      this.w = windowWidth / 7;
+      this.h = windowHeight / 5;
+    } else {
+      this.w = windowWidth / 5;
+      this.h = windowHeight / 7;
+    }
     this.v = 0;
+    this.r = 1;
   }
 
-  hits(asteroid) {
+  hits(asteroid) { //--------------------------- HIT------------------------//
     let d = dist(this.x, this.y, asteroid.pos.x, asteroid.pos.y);
-    return d <= asteroid.r;
+    return d < asteroid.r;
   }
 
   show() {
@@ -87,6 +128,7 @@ function preload() {
   spaceship = loadImage("./spaceship-02-min.png");
   background = loadImage("./background.svg");
   asteroid = loadImage("./asteroid.svg");
+  finishLine = loadImage('./finish-line.svg')
 }
 
 function setup() {
@@ -107,8 +149,9 @@ function setup() {
   for (let i = 0; i < 10; i++) {
     asteroids.push(new Asteroid(floor(random(30, 35))));
   }
-  player = new Spaceship(c_size / 2, c_size / 2, floor(spaceship.width / 3), floor(spaceship.height / 3));
-  start_pipe_x = c_size;
+  player = new Spaceship(windowWidth / 2, windowHeight / 2, floor(spaceship.width / 3), floor(spaceship.height / 3));
+  finish_line = new Finish(windowWidth / 2, -300, floor(windowWidth), floor(finishLine.height));
+  start_pipe_x = windowWidth;
 }
 
 function faceReady() {
@@ -126,28 +169,24 @@ function gotFaces(error, result) {
 }
 
 function mousePressed() {
-  if (mouseX > c_size / 2 - 100 && mouseX < c_size / 2 + 100 && mouseY > c_size / 2 + 50 && mouseY < c_size / 2 + 100) {
+  if (mouseX > windowWidth / 2 - 100 && mouseX < windowWidth / 2 + 100 && mouseY > windowHeight / 2 + 50 && mouseY < windowHeight / 2 + 100) {
     alive = true;
     asteroids = [];
     for (let i = 0; i < 10; i++) {
       asteroids.push(new Asteroid(floor(random(30, 35))));
     }
-    player = new Spaceship(c_size / 2, c_size / 2, floor(spaceship.width / 3), floor(spaceship.height / 3));
+    player = new Spaceship(windowWidth / 2, windowHeight / 2, floor(spaceship.width / 3), floor(spaceship.height / 3));
+    finish_line = new Finish(windowWidth / 2, -300, floor(windowWidth), floor(finishLine.height));
   }
 
 }
-let x = c_size;
-let prev_player = [c_size / 2, c_size / 2];
+let x = windowWidth;
+let prev_player = [windowWidth / 2, windowHeight / 2];
 
-function winPrompt() {
-  alive = false
-  won = true
-}
 
 
 
 function draw() {
-  // background(0)
   image(background, 0, 0, windowWidth, windowHeight);
   if (alive) {
     if (detections.length > 0) {
@@ -164,7 +203,6 @@ function draw() {
       fill(255);
       text("Face Detected", width - 150, 40);
       pop()
-      console.log("Face Detected")
     }
 
     for (let i = 0; i < asteroids.length; i++) {
@@ -178,41 +216,46 @@ function draw() {
 
     player.show()
 
-    let winTimeout = setTimeout(winPrompt, 60000)
+    setTimeout(finish_line.show(), 5000)
+
+    if (finish_line.finishHit(player)) {
+      alive = false;
+      won = true;
+    };
+
 
     for (let i = 0; i < asteroids.length; i++) {
       if (player.hits(asteroids[i])) {
         alive = false;
         won = false;
-        clearTimeout(winTimeout)
       }
     }
   } else {
     if (!alive && won) {
       textSize(32);
       textAlign(CENTER);
-      fill(255);
-      textFont('Oswald');
-      text("Congratulations!!\nYou won the game!!", c_size / 2, c_size / 2);
+      fill(41, 94, 168);
+      textFont('glitch');
+      text("proceed by your will", windowWidth / 2, windowHeight / 2.3);
       push()
-      noFill()
-      stroke(255)
-      strokeWeight(1)
-      rect(c_size / 2 - 100, c_size / 2 + 50, 200, 50);
-      text("Restart", c_size / 2, c_size / 2 + 85);
+      //
+      textSize(32);
+      textAlign(CENTER);
+      fill(149, 53, 197);
+      textFont('glitch');
+      text("victory is yours", windowWidth / 2, windowHeight / 2);
+      push()
       pop()
     } else {
       textSize(32);
       textAlign(CENTER);
-      fill(255);
-      textFont('Oswald');
-      text("Game Over", c_size / 2, c_size / 2);
+      fill(49, 53, 197);
+      textFont('glitch');
+      text("uh oh! you glitched out.", windowWidth / 2, windowHeight / 2);
       push()
-      noFill()
-      stroke(255)
-      strokeWeight(1)
-      rect(c_size / 2 - 100, c_size / 2 + 50, 200, 50);
-      text("Restart", c_size / 2, c_size / 2 + 85);
+      fill(149, 53, 197)
+      text("TRY AGAIN", windowWidth / 2, windowHeight / 2 + 85);
+      push()
       pop()
     }
   }
