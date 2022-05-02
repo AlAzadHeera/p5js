@@ -82,11 +82,11 @@ class Spaceship {
     this.x = x; // Center position of spaceship
     this.y = y; // Center position of spaceship
     if (windowWidth > windowHeight) {
-      this.w = windowWidth / 7;
-      this.h = windowHeight / 5;
-    } else {
-      this.w = windowWidth / 5;
+      this.w = windowWidth / 10;
       this.h = windowHeight / 7;
+    } else {
+      this.w = windowWidth / 7;
+      this.h = windowHeight / 10;
     }
     this.v = 0;
   }
