@@ -28,9 +28,9 @@ class Finish {
   show() {
     push()
     imageMode(CENTER);
-    image(finishLine, this.x - 1, this.y - 1, this.w, this.h);
+    image(finishLine, this.x, this.y, this.w, this.h);
     pop()
-    this.y += 1;
+    this.y += 2;
   }
 
   update() {
@@ -38,9 +38,10 @@ class Finish {
   }
 
   finishHit(spaceship) {
-    let di = dist(this.x, this.y, spaceship.x, spaceship.y)
-    if (di < spaceship.r) {
-      return di;
+    let di = dist(0, this.y, 0, spaceship.y)
+    console.log(di)
+    if (di < 10) {
+      return di
     }
   }
 
@@ -88,10 +89,10 @@ class Spaceship {
       this.h = windowHeight / 7;
     }
     this.v = 0;
-    this.r = 1;
   }
 
-  hits(asteroid) { //--------------------------- HIT------------------------//
+  //--------------------------- HIT------------------------//
+  hits(asteroid) {
     let d = dist(this.x, this.y, asteroid.pos.x, asteroid.pos.y);
     return d < asteroid.r;
   }
@@ -180,8 +181,8 @@ function mousePressed() {
   }
 
 }
-let x = windowWidth;
-let prev_player = [windowWidth / 2, windowHeight / 2];
+let x = c_size;
+let prev_player = [c_size / 2, c_size / 2];
 
 
 
