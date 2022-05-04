@@ -1,6 +1,6 @@
 let framecount = 0;
 let start_pipe_x = 500;
-let c_size = 800; //Canvas size
+let c_size = 900; //Canvas size
 let player;
 let finish_line;
 let capture;
@@ -30,7 +30,9 @@ class Finish {
     imageMode(CENTER);
     image(finishLine, this.x, this.y, this.w, this.h);
     pop()
-    this.y += 2;
+    if (this.y < 50) {
+      this.y += 1
+    }
   }
 
   update() {
@@ -39,7 +41,6 @@ class Finish {
 
   finishHit(spaceship) {
     let di = dist(0, this.y, 0, spaceship.y)
-    console.log(di)
     if (di < 10) {
       return di
     }
@@ -50,9 +51,9 @@ class Finish {
 class Asteroid {
   constructor(r) {
     this.r = windowWidth / 15; //Size of the astaroids
-    this.pos = createVector(random(50, width), 0);
-    this.vel = createVector(0, random(1, 3));
-    this.total = floor(random(6, 10));
+    this.pos = createVector(random(1, width), 0);
+    this.vel = createVector(0, random(1, 2));
+    this.total = floor(random(1, 2));
     this.offset = [];
     this.color = random(ast_colors);
     for (var i = 0; i < this.total; i++) {
@@ -151,7 +152,7 @@ function setup() {
     asteroids.push(new Asteroid(floor(random(30, 35))));
   }
   player = new Spaceship(windowWidth / 2, windowHeight / 2, floor(spaceship.width / 3), floor(spaceship.height / 3));
-  finish_line = new Finish(windowWidth / 2, -300, floor(windowWidth), floor(finishLine.height));
+  finish_line = new Finish(windowWidth / 2, -500, floor(windowWidth), floor(finishLine.height));
   start_pipe_x = windowWidth;
 }
 
@@ -177,7 +178,7 @@ function mousePressed() {
       asteroids.push(new Asteroid(floor(random(30, 35))));
     }
     player = new Spaceship(windowWidth / 2, windowHeight / 2, floor(spaceship.width / 3), floor(spaceship.height / 3));
-    finish_line = new Finish(windowWidth / 2, -300, floor(windowWidth), floor(finishLine.height));
+    finish_line = new Finish(windowWidth / 2, -500, floor(windowWidth), floor(finishLine.height));
   }
 
 }
@@ -211,13 +212,23 @@ function draw() {
       asteroids[i].update();
       if (asteroids[i].offscreen()) {
         asteroids.splice(i, 1);
-        asteroids.push(new Asteroid(floor(random(30, 35))));
+        asteroids.push(new Asteroid(floor(random(40, 45))));
       }
     }
 
+    for (let i = 0; i < asteroids.length; i++) {
+      asteroids[i].show();
+      asteroids[i].update();
+      if (asteroids[i].offscreen()) {
+        asteroids.splice(i, 1);
+        asteroids.push(new Asteroid(floor(random(1, 3))));
+      }
+    }
+
+
     player.show()
 
-    setTimeout(finish_line.show(), 5000)
+    finish_line.show()
 
     if (finish_line.finishHit(player)) {
       alive = false;
@@ -231,16 +242,25 @@ function draw() {
         won = false;
       }
     }
+
   } else {
     if (!alive && won) {
-      textSize(32);
+      if (windowWidth < 760) {
+        textSize(25);
+      } else {
+        textSize(32);
+      }
       textAlign(CENTER);
       fill(41, 94, 168);
       textFont('glitch');
       text("proceed by your will", windowWidth / 2, windowHeight / 2.3);
       push()
       //
-      textSize(32);
+      if (windowWidth < 760) {
+        textSize(25);
+      } else {
+        textSize(32);
+      }
       textAlign(CENTER);
       fill(149, 53, 197);
       textFont('glitch');
@@ -248,7 +268,11 @@ function draw() {
       push()
       pop()
     } else {
-      textSize(32);
+      if (windowWidth < 760) {
+        textSize(25);
+      } else {
+        textSize(32);
+      }
       textAlign(CENTER);
       fill(49, 53, 197);
       textFont('glitch');
