@@ -135,7 +135,7 @@ function preload() {
 
 function setup() {
   capture = createCapture(VIDEO);
-  capture.size(c_size / 4, c_size / 4);
+  capture.size(c_size / 4, c_size / 3);
   capture.hide();
   capture.id("video")
   console.log(capture)
